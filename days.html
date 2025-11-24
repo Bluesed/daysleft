@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pill Protocol</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1e1e1e; /* VS Code Dark */
+            color: #ffffff;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify_content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .card {
+            background-color: #252526;
+            border-left: 4px solid #ff4d4d; /* Crimson accent */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        .heart-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="flex items-center mb-6">
+            <span class="text-3xl mr-3 heart-pulse">❤️</span>
+            <h1 class="text-2xl font-bold text-gray-100 tracking-wide">THE PILL PROTOCOL</h1>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Target Section -->
+            <div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider mb-1">Target Date (Dec 15)</p>
+                <div class="flex justify-between items-end border-b border-gray-700 pb-2">
+                    <span class="text-3xl font-mono" id="target-count">--</span>
+                    <span class="text-sm text-gray-500 mb-1">days remaining</span>
+                </div>
+            </div>
+
+            <!-- Pill Section -->
+            <div>
+                <p class="text-gray-400 text-sm uppercase tracking-wider mb-1">Protocol Start (Dec 07)</p>
+                <div class="flex justify-between items-end border-b border-gray-700 pb-2">
+                    <span class="text-3xl font-mono text-red-400" id="pill-count">--</span>
+                    <span class="text-sm text-gray-500 mb-1" id="pill-status">days remaining</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-xs text-gray-600" id="current-date">Loading date...</p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION
+        const TARGET_MONTH = 11; // Month is 0-indexed in JS (11 = Dec)
+        const TARGET_DAY = 15;
+        const DAYS_BEFORE = 8;
+        
+        function updateDashboard() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            
+            // Set Target Date (Dec 15)
+            let targetDate = new Date(currentYear, TARGET_MONTH, TARGET_DAY, 0, 0, 0);
+            
+            // Logic: If passed Dec 15, look to next year? 
+            // For now, we just calculate raw difference.
+            
+            // Set Pill Date (8 days before)
+            let pillDate = new Date(targetDate);
+            pillDate.setDate(targetDate.getDate() - DAYS_BEFORE);
+
+            // Calculate differences in time
+            const diffTarget = targetDate - now;
+            const diffPill = pillDate - now;
+
+            // Convert to Days (Math.ceil to round up partial days)
+            const daysToTarget = Math.ceil(diffTarget / (1000 * 60 * 60 * 24));
+            const daysToPill = Math.ceil(diffPill / (1000 * 60 * 60 * 24));
+
+            // UPDATE UI: TARGET
+            const targetEl = document.getElementById('target-count');
+            if (daysToTarget > 0) {
+                targetEl.innerText = daysToTarget;
+            } else if (daysToTarget === 0) {
+                targetEl.innerText = "TODAY";
+                targetEl.classList.add("text-green-400");
+            } else {
+                targetEl.innerText = "DONE";
+                targetEl.classList.add("text-gray-600");
+            }
+
+            // UPDATE UI: PILL
+            const pillEl = document.getElementById('pill-count');
+            const pillStatusEl = document.getElementById('pill-status');
+            
+            if (daysToPill > 0) {
+                pillEl.innerText = daysToPill;
+                pillEl.className = "text-3xl font-mono text-white";
+                pillStatusEl.innerText = "days remaining";
+            } else if (daysToPill === 0) {
+                pillEl.innerText = "START NOW";
+                pillEl.className = "text-3xl font-mono text-red-500 animate-pulse";
+                pillStatusEl.innerText = "Critical";
+            } else {
+                // Check if we are in the active window (Past start, before target)
+                if (daysToTarget >= 0) {
+                    pillEl.innerText = "ACTIVE";
+                    pillEl.className = "text-3xl font-mono text-red-500";
+                    pillStatusEl.innerText = "Protocol in effect";
+                } else {
+                    pillEl.innerText = "DONE";
+                    pillEl.className = "text-3xl font-mono text-gray-600";
+                    pillStatusEl.innerText = "Protocol complete";
+                }
+            }
+
+            // Update footer date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').innerText = now.toLocaleDateString('en-GB', options);
+        }
+
+        // Run on load and every second
+        updateDashboard();
+        setInterval(updateDashboard, 1000);
+
+    </script>
+</body>
+</html>
